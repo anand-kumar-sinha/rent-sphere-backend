@@ -78,7 +78,7 @@ const getProducts = async (req, res) => {
   try {
     const { lat, lon, page, range, category, minPrice, maxPrice } = req.query;
     const radius = parseInt(range) * 1000;
-    const limit = 20;
+    const limit = 5;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const filters = {};
@@ -86,58 +86,93 @@ const getProducts = async (req, res) => {
 
     if (minPrice || maxPrice) {
       filters.pricePerDay = {};
-      if (minPrice) filters.pricePerDay.$gte = parseFloat(minPrice); // Greater than or equal to minPrice
-      if (maxPrice) filters.pricePerDay.$lte = parseFloat(maxPrice); // Less than or equal to maxPrice
+      if (minPrice) filters.pricePerDay.$gte = parseFloat(minPrice);
+      if (maxPrice) filters.pricePerDay.$lte = parseFloat(maxPrice);
     }
 
-    const products = await Product.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: [parseFloat(lat), parseFloat(lon)],
+    if (lat && lon) {
+      const products = await Product.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [parseFloat(lat), parseFloat(lon)],
+            },
+            distanceField: "distance",
+            maxDistance: radius,
+            spherical: true,
           },
-          distanceField: "distance",
-          maxDistance: radius,
-          spherical: true,
         },
-      },
-      { $match: filters },
-      { $skip: skip },
-      { $limit: parseInt(limit) },
-      {
-        $lookup: {
-          from: "users",
-          localField: "owner",
-          foreignField: "_id",
-          as: "owner",
+        { $match: filters },
+        { $skip: parseInt(skip) },
+        { $limit: parseInt(limit) },
+        {
+          $lookup: {
+            from: "users",
+            localField: "owner",
+            foreignField: "_id",
+            as: "owner",
+          },
         },
-      },
-      {
-        $unwind: "$owner",
-      },
-    ]);
+        {
+          $unwind: "$owner",
+        },
+      ]);
 
-    const totalCount = await Product.countDocuments({
-      location: {
-        $geoWithin: {
-          $centerSphere: [
-            [parseFloat(lat), parseFloat(lon)],
-            parseInt(range) / 6378.1,
-          ],
+      const totalCount = await Product.countDocuments({
+        location: {
+          $geoWithin: {
+            $centerSphere: [
+              [parseFloat(lat), parseFloat(lon)],
+              parseInt(range) / 6378.1,
+            ],
+          },
         },
-      },
-      ...filters,
-    });
+        ...filters,
+      });
 
-    res.json({
-      success: true,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(totalCount / limit),
-      totalResults: totalCount,
-      products,
-    });
+      console.log(totalCount)
+      res.json({
+        success: true,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(totalCount / limit),
+        totalResults: totalCount,
+        products,
+      });
+
+      return;
+    } else {
+      const products = await Product.aggregate([
+        { $match: filters },
+        { $skip: skip },
+        { $limit: parseInt(limit) },
+        {
+          $lookup: {
+            from: "users",
+            localField: "owner",
+            foreignField: "_id",
+            as: "owner",
+          },
+        },
+        {
+          $unwind: "$owner",
+        },
+      ]);
+
+      totalCount = await Product.countDocuments(filters);
+
+      res.json({
+        success: true,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(totalCount / limit),
+        totalResults: totalCount,
+        products,
+      });
+
+      return;
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -263,7 +298,7 @@ const deleteProduct = async (req, res) => {
       error: error,
     });
   }
-}
+};
 
 module.exports = {
   addProduct,
