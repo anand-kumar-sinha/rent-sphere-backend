@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, fcmId } = req.body;
 
     if (!name || !email || !password) {
       res.status(401).json({
@@ -42,6 +42,7 @@ const registerUser = async (req, res) => {
       username: email.split("@")[0],
       password,
       otp,
+      fcmId: fcmId,
     });
     const info = await transporter.sendMail({
       from: '"Rent Sphere" <helloengg.420@gmail.com>',
@@ -139,6 +140,8 @@ const verifyUser = async (req, res) => {
 const googleLogin = async (req, res) => {
   try {
     const { code } = req.query;
+    const {fcmId} = req.body;
+    console.log(fcmId);
     const googleRes = await oauth2client.getToken(code);
     oauth2client.setCredentials(googleRes.tokens);
     const userRes = await axios.get(
@@ -156,6 +159,7 @@ const googleLogin = async (req, res) => {
         username: email.split("@")[0],
         profilePicture: picture,
         isVerified: verified_email,
+        fcmId: fcmId,
         location: {
           type: "Point",
           coordinates: [0, 0],
@@ -173,7 +177,10 @@ const googleLogin = async (req, res) => {
 
     await user.save();
     user = await User.findOne({ email });
+    user.fcmId = fcmId;
     const token = generateToken(user._id);
+
+    await user.save();
 
     res.json({
       success: true,
@@ -191,7 +198,7 @@ const googleLogin = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, fcmId } = req.body;
 
     if (!email || !password) {
       res.status(401).json({
@@ -245,9 +252,10 @@ const loginUser = async (req, res) => {
       });
       return;
     }
-
+    user.fcmId = fcmId;
     const token = generateToken(user._id);
 
+    await user.save();
     res.json({
       success: true,
       message: "Login Successful",
