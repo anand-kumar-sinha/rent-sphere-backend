@@ -5,7 +5,7 @@ const { googleLogin, registerUser, verifyUser, loginUser, userProfile } = requir
 const router = express.Router();
 
 router.route("/google/auth").get(googleLogin);
-router.route("/auth/register").get(registerUser);
+router.route("/auth/register").post(registerUser);
 router.route("/auth/user/verify").get(verifyUser);
 router.route("/auth/login").get(loginUser);
 router.route("/user/profile").get(protect,userProfile);
