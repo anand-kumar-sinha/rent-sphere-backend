@@ -43,12 +43,11 @@ const registerUser = async (req, res) => {
       password,
       otp,
     });
-
     const info = await transporter.sendMail({
       from: '"Rent Sphere" <helloengg.420@gmail.com>',
       to: email,
       subject: "Your Verification Code",
-      text: `Hi ${username},
+      text: `Hi ${email.split("@")[0]},
 
             Your One-Time Password (OTP) for verification is: ${otp}
 
@@ -68,9 +67,9 @@ const registerUser = async (req, res) => {
       return;
     }
 
-    user = await User.findById(user?._id).select("-passwor -otp");
+    user = await User.findById(user?._id).select("-password -otp");
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "User created successfully",
       user,
@@ -153,6 +152,7 @@ const googleLogin = async (req, res) => {
       user = await User.create({
         name: name,
         email: email,
+        password: "",
         username: email.split("@")[0],
         profilePicture: picture,
         isVerified: verified_email,
