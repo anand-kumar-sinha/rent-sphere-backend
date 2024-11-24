@@ -78,7 +78,7 @@ const getProducts = async (req, res) => {
   try {
     const { lat, lon, page, range, category, minPrice, maxPrice } = req.query;
     const radius = parseInt(range) * 1000;
-    const limit = 5;
+    const limit = 15;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const filters = {};
@@ -131,7 +131,6 @@ const getProducts = async (req, res) => {
         ...filters,
       });
 
-      console.log(totalCount)
       res.json({
         success: true,
         page: parseInt(page),
