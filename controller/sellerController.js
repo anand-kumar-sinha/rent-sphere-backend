@@ -128,6 +128,7 @@ const selleraddProduct = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      message: "Product created successfully",
       product,
     });
   } catch (error) {
