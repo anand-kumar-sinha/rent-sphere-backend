@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
+const sellerRoutes = require("./routes/sellerRoutes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ connectDataBase();
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/users", productRoutes);
+app.use("/api/v1/users", sellerRoutes);
 app.listen(process.env.PORT, () => {
   console.log(`Server is Started on ${process.env.PORT} port`);
 });
