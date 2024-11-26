@@ -104,7 +104,6 @@ const selleraddProduct = async (req, res) => {
       !pricePerDay ||
       !location ||
       !images ||
-      !availability ||
       !rentalTerms
     ) {
       res.status(400).json({
