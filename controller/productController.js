@@ -30,7 +30,6 @@ const getProducts = async (req, res) => {
       if (minPrice) filters.pricePerDay.$gte = parseFloat(minPrice);
       if (maxPrice) filters.pricePerDay.$lte = parseFloat(maxPrice);
     }
-
     if (lat && lon) {
       const products = await Product.aggregate([
         {

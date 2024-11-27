@@ -125,8 +125,6 @@ const selleraddProduct = async (req, res) => {
       req.files.map(async (file) => {
         const fileData = fs.readFileSync(file.path);
 
-        console.log(fileData);
-
         const storageRef = ref(
           storage,
           `rentsphere/${user._id}/${Date.now()}-${file.originalname}`
