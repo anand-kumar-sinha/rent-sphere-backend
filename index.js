@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "*", 
+    origin: "*",
     credentials: true,
     allowedHeaders: [
       "Authorization",
@@ -30,6 +30,7 @@ connectDataBase();
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/users", productRoutes);
 app.use("/api/v1/users", sellerRoutes);
+
 app.listen(process.env.PORT, () => {
   console.log(`Server is Started on ${process.env.PORT} port`);
 });

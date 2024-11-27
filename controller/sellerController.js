@@ -1,10 +1,8 @@
-const User = require("../models/User");
-const generateToken = require("../middleware/generateToken");
-const { oauth2client } = require("../config/googleConfig");
-const { default: axios } = require("axios");
 const nodemailer = require("nodemailer");
 const Product = require("../models/Product");
-const { json } = require("express");
+const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+const { storage } = require("../firebase");
+const fs = require("fs");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -71,47 +69,79 @@ const selleraddProduct = async (req, res) => {
   try {
     const user = req.user;
 
+    // Check if user is authenticated
     if (!user) {
-      res.status(403).json({
+      return res.status(403).json({
         success: false,
         message: "Unauthorized access",
       });
-      return;
     }
 
+    // Check if user is a seller
     if (!user.isSeller) {
-      res.status(403).json({
+      return res.status(403).json({
         success: false,
         message: "You are not a seller",
       });
-      return;
     }
+
+    // Extract body fields
     const {
       title,
       description,
       category,
       pricePerDay,
       location,
-      images,
       availability,
-      rentalTerms
+      rentalTerms,
     } = req.body;
 
+    // Validate required fields
     if (
       !title ||
       !description ||
       !category ||
       !pricePerDay ||
       !location ||
-      !images ||
       !rentalTerms
     ) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
       });
-      return;
     }
+
+    // Parse location (if sent as a JSON string)
+    const parsedLocation = JSON.parse(location);
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload at least one image",
+      });
+    }
+
+    const imagePaths = await Promise.all(
+      req.files.map(async (file) => {
+        const fileData = fs.readFileSync(file.path);
+
+        console.log(fileData);
+
+        const storageRef = ref(
+          storage,
+          `rentsphere/${user._id}/${Date.now()}-${file.originalname}`
+        );
+
+        // Upload file to Firebase
+        const snapshot = await uploadBytes(storageRef, fileData, {
+          contentType: file.mimetype,
+        });
+
+        fs.unlinkSync(file.path);
+
+        return getDownloadURL(snapshot.ref);
+      })
+    );
 
     const product = await Product.create({
       owner: user._id,
@@ -119,21 +149,24 @@ const selleraddProduct = async (req, res) => {
       description,
       category,
       pricePerDay,
-      location,
-      images,
+      location: parsedLocation,
+      images: imagePaths, // Store file paths in the database
       availability,
       rentalTerms,
     });
 
+    // Respond with success
     res.status(201).json({
       success: true,
       message: "Product created successfully",
       product,
     });
   } catch (error) {
+    console.error("Error in selleraddProduct:", error);
     res.status(500).json({
       success: false,
-      error: error,
+      message: "An error occurred while creating the product",
+      error: error.message,
     });
   }
 };
@@ -144,7 +177,7 @@ const sellerupdateProduct = async (req, res) => {
     const user = req.user;
     const updates = req.body;
 
-    if(!user){
+    if (!user) {
       res.status(403).json({
         success: false,
         message: "Unauthorized access",
@@ -152,7 +185,7 @@ const sellerupdateProduct = async (req, res) => {
       return;
     }
 
-    if(!user?.isSeller){
+    if (!user?.isSeller) {
       res.status(403).json({
         success: false,
         message: "You are not seller please contact admin",
@@ -209,7 +242,7 @@ const sellerdeleteProduct = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    if(!user){
+    if (!user) {
       res.status(403).json({
         success: false,
         message: "Unauthorized access",
@@ -217,7 +250,7 @@ const sellerdeleteProduct = async (req, res) => {
       return;
     }
 
-    if(!user?.isSeller){
+    if (!user?.isSeller) {
       res.status(403).json({
         success: false,
         message: "You are not seller please contact admin",
@@ -269,5 +302,5 @@ module.exports = {
   sellerFetchProduct,
   selleraddProduct,
   sellerupdateProduct,
-  sellerdeleteProduct
+  sellerdeleteProduct,
 };
