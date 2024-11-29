@@ -442,14 +442,24 @@ const createOrder = async (req, res) => {
 
     if (user.fcmId) {
       const title = "🎉Order Placed Successfully!🎉";
-      const body = `Hi ${user.name}, your order #${order._id} has been placed and is being processed. Thank you for connecting with us!`;
-      sendNotificationToDevice(fcmId, title, body);
+      const body = `Hi ${user.name}, your order ${order._id} has been placed and is being processed. Thank you for connecting with us!`;
+
+      await sendNotificationToDevice({
+        fcmToken: user.fcmId,
+        title: title,
+        body: body,
+      });
     }
 
     if (owner.fcmId) {
       const title = "🛒 New Order Received!";
-      const body = `Hi ${owner.name}, you have received a new order #${order._id}. Please prepare it for processing. Thank you for partnering with us!`;
-      sendNotificationToDevice(fcmId, title, body);
+      const body = `Hi ${owner.name}, you have received a new order ${order._id}. Please prepare it for processing. Thank you for partnering with us!`;
+
+      await sendNotificationToDevice({
+        fcmToken: owner.fcmId,
+        title: title,
+        body: body,
+      });
     }
 
     res.status(201).json({
@@ -469,10 +479,10 @@ const sendNotification = (req, res) => {
   try {
     const user = req.user;
     const fcmId =
-      "cn4wup3_SsgRWEk_q1iw3K:APA91bF7amAbDRKBm53RfrhBugh6jJEFewG5d2cQCw-tjjf7vCwVKTiUoIPmj8pwpVAZzY7KWjF4_pumHv1iqgaSeCh3P0JcjfN4bhIKLD4CAOx6F4jmAAk";
+      "cDeQm0_lMmZO5g5Ezc2qqX:APA91bG2N7E8O2nOQYTJM5bWPYFcRrcy_1xLyNYdUCPFwNRKc3b96oGqR4aH1m_9G6NUtdCBFG_MFhAhP3_umIW-hvkegbku3RsGmVEjSJgqEymT_R7JB58";
     const title = "test title";
     const body = "test body";
-    sendNotificationToDevice(fcmId, title, body);
+    sendNotificationToDevice({ fcmToken: fcmId, title: title, body: body });
 
     res.status(200).json({
       success: true,
