@@ -3,8 +3,6 @@ const { protect } = require("../middleware/Auth");
 const {
   getProducts,
   getProductById,
-  updateProduct,
-  deleteProduct,
 } = require("../controller/productController");
 
 const router = express.Router();

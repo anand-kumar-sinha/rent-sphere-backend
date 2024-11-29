@@ -62,16 +62,16 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  listings: [
+  reciveOrders: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Item", // Reference to the Item model
+      ref: "Order",
     },
   ],
   rentals: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Rental", // Reference to the Rental model
+      ref: "Order",
     },
   ],
 });

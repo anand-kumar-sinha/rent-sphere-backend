@@ -296,6 +296,17 @@ const sellerdeleteProduct = async (req, res) => {
   }
 };
 
+const sellerDahsboard = async(req, res) =>{
+  try {
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error,
+    });
+  }
+}
+
 module.exports = {
   sellerFetchProduct,
   selleraddProduct,

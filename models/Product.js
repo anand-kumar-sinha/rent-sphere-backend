@@ -17,7 +17,6 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Item description is required"],
       trim: true,
-      maxlength: 500,
     },
     category: {
       type: String,

@@ -1,5 +1,12 @@
 const { initializeApp } = require("firebase/app");
 const { getStorage } = require("firebase/storage");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json");
+
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 // Firebase project configuration
 const firebaseConfig = {
@@ -15,5 +22,4 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
-
-module.exports = { app, storage };
+module.exports = { app, storage, admin };
