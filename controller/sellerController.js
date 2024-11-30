@@ -3,6 +3,7 @@ const Product = require("../models/Product");
 const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
 const { storage } = require("../firebase");
 const fs = require("fs");
+const User = require("../models/User");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -56,6 +57,63 @@ const sellerFetchProduct = async (req, res) => {
       totalPages: Math.ceil(count / limit),
       totalResults: count,
       products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error,
+    });
+  }
+};
+
+const sellerFetchOrder = async (req, res) => {
+  try {
+    let user = req.user;
+    let page = 1;
+    let limit = 15;
+    let skip = (page - 1) * limit;
+    if (!user) {
+      res.status(403).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+
+    if (!user.isSeller) {
+      res.status(403).json({
+        success: false,
+        message: "You are not seller please contact admin",
+      });
+      return;
+    }
+
+    const { reciveOrders } = await User.findById(user._id)
+      .populate({
+        path: "reciveOrders",
+        options: {
+          skip: parseInt(skip),
+          limit: parseInt(limit),
+        },
+      });
+
+    let count = await User.findById(user._id).select("reciveOrders");
+    count = count.reciveOrders.length;
+
+    if (!reciveOrders) {
+      res.status(404).json({
+        success: false,
+        message: "No orders found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(count / limit),
+      totalResults: count,
+      reciveOrders,
     });
   } catch (error) {
     res.status(500).json({
@@ -296,20 +354,20 @@ const sellerdeleteProduct = async (req, res) => {
   }
 };
 
-const sellerDahsboard = async(req, res) =>{
+const sellerDahsboard = async (req, res) => {
   try {
-    
   } catch (error) {
     res.status(500).json({
       success: false,
       error: error,
     });
   }
-}
+};
 
 module.exports = {
   sellerFetchProduct,
   selleraddProduct,
   sellerupdateProduct,
   sellerdeleteProduct,
+  sellerFetchOrder,
 };

@@ -5,12 +5,14 @@ const {
   selleraddProduct,
   sellerupdateProduct,
   sellerdeleteProduct,
+  sellerFetchOrder,
 } = require("../controller/sellerController");
 const uploadMiddleware = require("../middleware/uploadImages");
 
 const router = express.Router();
 
 router.route("/seller/product/fetch").get(protect, sellerFetchProduct);
+router.route("/seller/order/fetch").get(protect, sellerFetchOrder);
 router
   .route("/seller/product/add")
   .post(protect, uploadMiddleware, selleraddProduct);
