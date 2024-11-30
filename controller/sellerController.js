@@ -87,17 +87,18 @@ const sellerFetchOrder = async (req, res) => {
       return;
     }
 
-    const { reciveOrders } = await User.findById(user._id)
-      .populate({
-        path: "reciveOrders",
-        options: {
-          skip: parseInt(skip),
-          limit: parseInt(limit),
-        },
-      });
+    const { reciveOrders } = await User.findById(user._id).populate({
+      path: "reciveOrders",
+      options: {
+        skip: parseInt(skip),
+        limit: parseInt(limit),
+      },
+      populate: {
+        path: "productId",
+      },
+    });
 
-    let count = await User.findById(user._id).select("reciveOrders");
-    count = count.reciveOrders.length;
+    let count = user.reciveOrders.length;
 
     if (!reciveOrders) {
       res.status(404).json({
