@@ -4,6 +4,7 @@ const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
 const { storage } = require("../firebase");
 const fs = require("fs");
 const User = require("../models/User");
+const Order = require("../models/Orders");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -69,7 +70,8 @@ const sellerFetchProduct = async (req, res) => {
 const sellerFetchOrder = async (req, res) => {
   try {
     let user = req.user;
-    const {page} = req.body;
+    let { page } = req.query;
+    page = parseInt(page);
     let limit = 8;
     let skip = (page - 1) * limit;
     if (!user) {
@@ -211,6 +213,9 @@ const selleraddProduct = async (req, res) => {
       availability,
       rentalTerms,
     });
+
+    await user.listings.push(product._id);
+    await user.save();
 
     // Respond with success
     res.status(201).json({
@@ -357,6 +362,38 @@ const sellerdeleteProduct = async (req, res) => {
 
 const sellerDahsboard = async (req, res) => {
   try {
+    const user = req.user;
+    if (!user) {
+      res.status(403).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+      return;
+    }
+
+    if (!user.isSeller) {
+      res.status(403).json({
+        success: false,
+        message: "You are not seller please contact admin",
+      });
+      return;
+    }
+
+    const totalProducts = await user.listings.length;
+    const totalOrders = await user.reciveOrders.length;
+    let totalRevenue = 0;
+
+    for (const orderId of user.reciveOrders) {
+      const order = await Order.findById(orderId);
+      totalRevenue += parseInt(order.amount, 10);
+    }
+
+    res.status(200).json({
+      success: true,
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -371,4 +408,5 @@ module.exports = {
   sellerupdateProduct,
   sellerdeleteProduct,
   sellerFetchOrder,
+  sellerDahsboard,
 };

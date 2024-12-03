@@ -68,6 +68,12 @@ const userSchema = new mongoose.Schema({
       ref: "Order",
     },
   ],
+  listings: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
   rentals: [
     {
       type: mongoose.Schema.Types.ObjectId,
