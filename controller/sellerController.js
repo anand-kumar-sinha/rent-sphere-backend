@@ -69,8 +69,8 @@ const sellerFetchProduct = async (req, res) => {
 const sellerFetchOrder = async (req, res) => {
   try {
     let user = req.user;
-    let page = 1;
-    let limit = 15;
+    const {page} = req.body;
+    let limit = 8;
     let skip = (page - 1) * limit;
     if (!user) {
       res.status(403).json({
