@@ -251,9 +251,8 @@ const loginUser = async (req, res) => {
               Stay secure,
               The Rent Sphere Team`,
       });
-
+      
       user.otp = otp;
-
       await user.save();
       res.status(401).json({
         success: false,

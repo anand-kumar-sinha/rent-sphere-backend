@@ -123,7 +123,7 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id).populate("owner");
+    const product = await Product.findById(id)
     if (!product) {
       res.status(404).json({
         success: false,

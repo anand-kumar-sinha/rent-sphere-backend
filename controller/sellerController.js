@@ -214,6 +214,13 @@ const selleraddProduct = async (req, res) => {
       rentalTerms,
     });
 
+    if(!product){
+      return res.status(400).json({
+        success: false,
+        message: "Product not created",
+      });
+    }
+
     await user.listings.push(product._id);
     await user.save();
 
