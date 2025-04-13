@@ -172,9 +172,10 @@ const selleraddProduct = async (req, res) => {
       });
     }
 
-    // Parse location (if sent as a JSON string)
+    // Parse location (if sent as JSON string)
     const parsedLocation = JSON.parse(location);
 
+    // Validate file upload
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -182,26 +183,21 @@ const selleraddProduct = async (req, res) => {
       });
     }
 
+    // Upload images to Firebase Storage
     const imagePaths = await Promise.all(
       req.files.map(async (file) => {
-        const fileData = fs.readFileSync(file.path);
+        const uniquePath = `rentsphere/${user._id}/${Date.now()}-${file.originalname}`;
+        const storageRef = ref(storage, uniquePath);
 
-        const storageRef = ref(
-          storage,
-          `rentsphere/${user._id}/${Date.now()}-${file.originalname}`
-        );
-
-        // Upload file to Firebase
-        const snapshot = await uploadBytes(storageRef, fileData, {
+        const snapshot = await uploadBytes(storageRef, file.buffer, {
           contentType: file.mimetype,
         });
 
-        fs.unlinkSync(file.path);
-
-        return getDownloadURL(snapshot.ref);
+        return await getDownloadURL(snapshot.ref);
       })
     );
 
+    // Create product document
     const product = await Product.create({
       owner: user._id,
       title,
@@ -209,29 +205,22 @@ const selleraddProduct = async (req, res) => {
       category,
       pricePerDay,
       location: parsedLocation,
-      images: imagePaths, // Store file paths in the database
+      images: imagePaths,
       availability,
       rentalTerms,
     });
 
-    if (!product) {
-      return res.status(400).json({
-        success: false,
-        message: "Product not created",
-      });
-    }
-
-    await user.listings.push(product._id);
+    // Push product to user's listings
+    user.listings.push(product._id);
     await user.save();
 
-    // Respond with success
+    // Send response
     res.status(201).json({
       success: true,
       message: "Product created successfully",
       product,
     });
   } catch (error) {
-    console.error("Error in selleraddProduct:", error);
     res.status(500).json({
       success: false,
       message: "An error occurred while creating the product",
