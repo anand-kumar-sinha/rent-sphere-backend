@@ -214,7 +214,7 @@ const selleraddProduct = async (req, res) => {
       rentalTerms,
     });
 
-    if(!product){
+    if (!product) {
       return res.status(400).json({
         success: false,
         message: "Product not created",
@@ -235,7 +235,7 @@ const selleraddProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "An error occurred while creating the product",
-      error: error.message,
+      error: error.message || error,
     });
   }
 };
